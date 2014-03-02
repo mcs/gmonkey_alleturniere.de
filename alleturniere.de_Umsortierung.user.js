@@ -1,23 +1,40 @@
 // ==UserScript==
+
 // @name        alleturniere.de Umsortierung
-// @namespace   http://alleturniere.de/*
+// @namespace   https://github.com/mcs/*
 // @description Sortiert Ergebniszeilen um
-// @include     http://alleturniere.de/sport/teammatch.aspx?id=*
+// @require     http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js
+// @require     http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js
+// @include     */sport/teammatch.*
+// @include     */sport/matchresult.*
 // @grant       none
 // @version     0.1
 // ==/UserScript==
 
-var tbody = document.querySelector("table.matches > tbody"),
-    rows = document.querySelectorAll("table.matches > tbody > tr");
+(function ($) {
+    "use strict";
 
-// Umsortierung der 8 Spiele passend zum Victor-Spielbogen
-if (rows.length === 8) {
-    tbody.appendChild(rows[2]);
-    tbody.appendChild(rows[0]);
-    tbody.appendChild(rows[1]);
-    tbody.appendChild(rows[7]);
-    tbody.appendChild(rows[6]);
-    tbody.appendChild(rows[5]);
-    tbody.appendChild(rows[3]);
-    tbody.appendChild(rows[4]);
-}
+    // make teammatch page sortable
+    $('table.matches > tbody').sortable({
+        items: "tr"
+    });
+
+    // make matchresult page sortable
+    $('fieldset.matchresult > table > tbody').sortable({
+        items: "tr[id^='itemrow']",
+        update: function (event, ui) {
+            // Use different background for every second row even after resorting
+            var $item = ui.item;
+            $item.parent().find("tr").each(function (index, element) {
+                var $elem = $(element);
+                console.log("%o", element);
+                if (index % 2 === 0) {
+                    $elem.removeClass('gray');
+                } else {
+                    $elem.addClass('gray');
+                }
+            });
+        }
+    });
+})(jQuery);
+
