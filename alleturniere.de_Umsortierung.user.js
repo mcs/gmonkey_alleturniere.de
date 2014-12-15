@@ -1,6 +1,6 @@
 // ==UserScript==
 
-// @name        alleturniere.de Umsortierung
+// @name        AlleTurniere.de Umsortierung
 // @namespace   https://github.com/mcs/*
 // @description Sortiert Ergebniszeilen um
 // @require     http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js
@@ -12,7 +12,7 @@
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @author      Marcus Krassmann
-// @version     0.2
+// @version     0.3
 // ==/UserScript==
 
 (function ($) {
@@ -22,24 +22,18 @@
         tableBodyXPath,
         tableRowXPath,
         $tableBody,
-        $tableRows;
+        $tableRows,
+        grayBackground = false;
 
-    if (page.indexOf("teammatch") !== -1) {
-        tableBodyXPath = 'table.matches > tbody';
-        tableRowXPath = 'tr';
-    } else if (page.indexOf("matchresult") !== -1) {
-        tableBodyXPath = 'fieldset.matchresult > table > tbody';
-        tableRowXPath = 'tr[id^="itemrow"]';
+    function puck($rows) {
+        if (grayBackground) {
+            $rows.each(function (index) {
+                $(this).toggleClass('gray', index % 2 === 1);
+            });
+        }
     }
-    $tableBody = $(tableBodyXPath);
-    $tableRows = $tableBody.children(tableRowXPath);
 
-    // make page sortable
-    $tableBody.sortable({
-        items: tableRowXPath
-    });
-
-    // allow to load pre-saved settings from user's local machine
+    // allows to load pre-saved settings from user's local browser
     function saveRowLayout() {
         var indexes = [];
         $tableBody.children(tableRowXPath).each(function (index, element) {
@@ -48,6 +42,7 @@
 
         GM_setValue("rowLayout", JSON.stringify(indexes));
         console.log("Saved order: %o", indexes);
+        alert("Neues Layout gespeichert.");
     }
 
     function rearrangeTableRows(arrangeArray) {
@@ -59,6 +54,7 @@
             $barrier.before($tableRows.get(arrangeArray[i]));
         }
         $barrier.remove();
+        puck($tableBody.children(tableRowXPath));
         console.log("Table rows rearranged!");
     }
 
@@ -69,19 +65,87 @@
         }
     }
 
-    (function addButtonToSaveLayout() {
-        var $button = $('<button id="saveRowLayout">Zeilenlayout speichern</button>');
-        $tableBody.parent().before($button);
+    function addButtonToSaveLayout() {
+        var $button = $('<input id="saveRowLayout" type="button" class="button" value="Zeilenlayout speichern"/>');
+        var $btnResetSubMatches = $("#btnResetSubMatches");
+        var $tableTeammatch = $(".ruler.matches");
+        if ($btnResetSubMatches.size() > 0) {
+            $btnResetSubMatches.before($button);
+        } else if ($tableTeammatch) {
+            $tableTeammatch.append($button);
+        } else {
+            $tableBody.parent().before($button);
+        }
         $("#saveRowLayout").on("click", function (e) {
             e.preventDefault();
             saveRowLayout();
         });
-    }());
+    }
 
-    $(function init() {
+    // do initialization after DOM is loaded
+    $(function () {
+        if (page.indexOf("teammatch") > -1) {
+            tableBodyXPath = 'table.matches > tbody';
+            tableRowXPath = 'tr';
+        } else if (page.indexOf("matchresult") > -1) {
+            tableBodyXPath = 'fieldset.matchresult > table > tbody';
+            tableRowXPath = 'tr[id^="itemrow"]';
+            grayBackground = true;
+        } else {
+            console.warn("href neither contains 'teammatch' nor 'matchresult'. No sorting applied.");
+            return;
+        }
+        $tableBody = $(tableBodyXPath);
+        $tableRows = $tableBody.children(tableRowXPath);
+
+        // make page sortable
+        $tableBody.sortable({
+            items: tableRowXPath,
+            update: function (event, ui) {
+                puck(ui.item.parent().children(tableRowXPath));
+            }
+        });
+
         loadRowLayoutAndRearrange();
+        addButtonToSaveLayout();
     });
 
     console.log("AlleTurniere.de Sortierung gestartet!");
+})(jQuery);
+
+
+(function enforceCorrectGenderForMixed($) {
+    "use strict";
+
+    function disableByInnerText(elem, stringPattern) {
+        $(elem).prop("disabled", this.innerText.indexOf(stringPattern) > -1);
+    }
+
+    if (window.location.href.indexOf("matchresult") > -1) {
+        var $trows = $('fieldset.matchresult > table > tbody > tr[id^="itemrow"]');
+        $trows.find("th").each(function () {
+            var $th = $(this);
+            // Suche Zeile mit dem gemischten Doppel
+            if ($th.text() === 'GD') {
+                // Erst einen Herren auswaehlen (oben Damen deaktivieren)
+                $th.parent().find('select[name$="p1"] > option').each(function () {
+                    $(this).prop("disabled", this.innerText.indexOf("(F, ") > -1);
+                });
+                // Danach die Dame auswaehlen (unten Herren deaktivieren)
+                $th.parent().find('select[name$="p2"] > option').each(function () {
+                    $(this).prop("disabled", this.innerText.indexOf("(M, ") > -1);
+                });
+            }
+        });
+    }
+
+    console.log("AlleTurniere.de Mixed-Reihenfolge gestartet!");
+})(jQuery);
+
+
+(function resultsWithMouse($) {
+    "use strict";
+
+    console.log("AlleTurniere.de Ergebniseingabe gestartet!");
 })(jQuery);
 
