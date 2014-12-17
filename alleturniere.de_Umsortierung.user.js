@@ -12,7 +12,7 @@
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @author      Marcus Krassmann
-// @version     0.3
+// @version     0.3a
 // ==/UserScript==
 
 (function ($) {
@@ -108,9 +108,8 @@
 
         loadRowLayoutAndRearrange();
         addButtonToSaveLayout();
+        console.log("AlleTurniere.de Sortierung geladen!");
     });
-
-    console.log("AlleTurniere.de Sortierung gestartet!");
 })(jQuery);
 
 
@@ -122,24 +121,26 @@
     }
 
     if (window.location.href.indexOf("matchresult") > -1) {
-        var $trows = $('fieldset.matchresult > table > tbody > tr[id^="itemrow"]');
-        $trows.find("th").each(function () {
-            var $th = $(this);
-            // Suche Zeile mit dem gemischten Doppel
-            if ($th.text() === 'GD') {
-                // Erst einen Herren auswaehlen (oben Damen deaktivieren)
-                $th.parent().find('select[name$="p1"] > option').each(function () {
-                    $(this).prop("disabled", this.innerText.indexOf("(F, ") > -1);
-                });
-                // Danach die Dame auswaehlen (unten Herren deaktivieren)
-                $th.parent().find('select[name$="p2"] > option').each(function () {
-                    $(this).prop("disabled", this.innerText.indexOf("(M, ") > -1);
-                });
-            }
+        // do initialization after DOM is loaded
+        $(function () {
+            var $trows = $('fieldset.matchresult > table > tbody > tr[id^="itemrow"]');
+            $trows.find("th").each(function () {
+                var $th = $(this);
+                // Suche Zeile mit dem gemischten Doppel
+                if ($th.text() === 'GD') {
+                    // Erst einen Herren auswaehlen (oben Damen deaktivieren)
+                    $th.parent().find('select[name$="p1"] > option').each(function () {
+                        $(this).prop("disabled", this.innerHTML.indexOf("(F, ") > -1);
+                    });
+                    // Danach die Dame auswaehlen (unten Herren deaktivieren)
+                    $th.parent().find('select[name$="p2"] > option').each(function () {
+                        $(this).prop("disabled", this.innerHTML.indexOf("(M, ") > -1);
+                    });
+                }
+            });
+            console.log("AlleTurniere.de Mixed-Reihenfolge geladen!");
         });
     }
-
-    console.log("AlleTurniere.de Mixed-Reihenfolge gestartet!");
 })(jQuery);
 
 
@@ -171,43 +172,44 @@
         head.appendChild(style);
     }
 
-    objBody = document.getElementsByTagName("body").item(0);
-    objScorebox = document.createElement("div");
-    objScorebox.setAttribute('id', 'scorebox');
-    objScorebox.setAttribute('style', 'padding: 0 15px; width:420px; height:530px; display:none; font-size: 101%; line-height:200%; background-color:#FCF7EF; border:2px solid #FF9900; position:absolute; z-Index:102; -moz-border-radius: 10px;');
-    objScorebox.innerHTML =
-        '<div style="text-align: right; height: 22px; margin: 4px 4px -4px 0;"><a style="color: #FF9900;" href="" onclick="' + "document.getElementById('scorebox').style.display='none'; return false;" + '">X</a></div>'
-            + '<table id="score_select_table" style="font-weight: bold; width: 100%; margin: 20px 0 5px 0;">'
-            + '<tr><td>21-9</td><td>21-19</td><td>30-29</td><td>29-30</td><td>19-21</td><td>9-21</td></tr>'
-            + '<tr><td>21-8</td><td>21-18</td><td>30-28</td><td>28-30</td><td>18-21</td><td>8-21</td></tr>'
-            + '<tr><td>21-7</td><td>21-17</td><td>29-27</td><td>27-29</td><td>17-21</td><td>7-21</td></tr>'
-            + '<tr><td>21-6</td><td>21-16</td><td>28-26</td><td>26-28</td><td>16-21</td><td>6-21</td></tr>'
-            + '<tr><td>21-5</td><td>21-15</td><td>27-25</td><td>25-27</td><td>15-21</td><td>5-21</td></tr>'
-            + '<tr><td>21-4</td><td>21-14</td><td>26-24</td><td>24-26</td><td>14-21</td><td>4-21</td></tr>'
-            + '<tr><td>21-3</td><td>21-13</td><td>25-23</td><td>23-25</td><td>13-21</td><td>3-21</td></tr>'
-            + '<tr><td>21-2</td><td>21-12</td><td>24-22</td><td>22-24</td><td>12-21</td><td>2-21</td></tr>'
-            + '<tr><td>21-1</td><td>21-11</td><td>23-21</td><td>21-23</td><td>11-21</td><td>1-21</td></tr>'
-            + '<tr><td>21-0</td><td>21-10</td><td>22-20</td><td>20-22</td><td>10-21</td><td>0-21</td></tr>'
-            + '<tr><td>-</td></tr>'
-            + '</table>'
-            + '</div>';
-    objBody.appendChild(objScorebox);
+    // do initialization after DOM is loaded
+    $(function () {
+        objBody = document.getElementsByTagName("body").item(0);
+        objScorebox = document.createElement("div");
+        objScorebox.setAttribute('id', 'scorebox');
+        objScorebox.setAttribute('style', 'padding: 0 15px; width:420px; height:530px; display:none; font-size: 101%; line-height:200%; background-color:#FCF7EF; border:2px solid #FF9900; position:absolute; z-Index:102; -moz-border-radius: 10px;');
+        objScorebox.innerHTML =
+            '<div style="text-align: right; height: 22px; margin: 4px 4px -4px 0;"><a style="color: #FF9900;" href="" onclick="' + "document.getElementById('scorebox').style.display='none'; return false;" + '">X</a></div>'
+                + '<table id="score_select_table" style="font-weight: bold; width: 100%; margin: 20px 0 5px 0;">'
+                + '<tr><td>21-9</td><td>21-19</td><td>30-29</td><td>29-30</td><td>19-21</td><td>9-21</td></tr>'
+                + '<tr><td>21-8</td><td>21-18</td><td>30-28</td><td>28-30</td><td>18-21</td><td>8-21</td></tr>'
+                + '<tr><td>21-7</td><td>21-17</td><td>29-27</td><td>27-29</td><td>17-21</td><td>7-21</td></tr>'
+                + '<tr><td>21-6</td><td>21-16</td><td>28-26</td><td>26-28</td><td>16-21</td><td>6-21</td></tr>'
+                + '<tr><td>21-5</td><td>21-15</td><td>27-25</td><td>25-27</td><td>15-21</td><td>5-21</td></tr>'
+                + '<tr><td>21-4</td><td>21-14</td><td>26-24</td><td>24-26</td><td>14-21</td><td>4-21</td></tr>'
+                + '<tr><td>21-3</td><td>21-13</td><td>25-23</td><td>23-25</td><td>13-21</td><td>3-21</td></tr>'
+                + '<tr><td>21-2</td><td>21-12</td><td>24-22</td><td>22-24</td><td>12-21</td><td>2-21</td></tr>'
+                + '<tr><td>21-1</td><td>21-11</td><td>23-21</td><td>21-23</td><td>11-21</td><td>1-21</td></tr>'
+                + '<tr><td>21-0</td><td>21-10</td><td>22-20</td><td>20-22</td><td>10-21</td><td>0-21</td></tr>'
+                + '<tr><td>-</td></tr>'
+                + '</table>'
+                + '</div>';
+        objBody.appendChild(objScorebox);
 
-    addGlobalStyle('#score_select_table td { font-size: 16px !important; line-height:200%; text-align:center; padding: 5px 5px; background-color: #F3F0E5; border:2px solid #FCF7EF;');
-    addGlobalStyle('#score_select_table td:hover { cursor: pointer; background-color: #FFFFEF; }');
+        addGlobalStyle('#score_select_table td { font-size: 16px !important; line-height:200%; text-align:center; padding: 5px 5px; background-color: #F3F0E5; border:2px solid #FCF7EF;');
+        addGlobalStyle('#score_select_table td:hover { cursor: pointer; background-color: #FFFFEF; }');
 
-    $('input[type="text"]').on("dblclick", function (e) {
-        field = e.target;
-        show_score_select();
+        $('input[type="text"]').on("dblclick", function (e) {
+            field = e.target;
+            show_score_select();
+        });
+
+        $('#score_select_table').find('td').on("click", function (e) {
+            var str = this.innerText;
+            field.value = str !== '-' ? str : '';
+            $("#scorebox").toggle();
+        });
+        console.log("AlleTurniere.de Ergebniseingabe geladen!");
     });
-
-    $('#score_select_table').find('td').on("click", function (e) {
-        var str = this.innerText;
-        field.value = str !== '-' ? str : '';
-        $("#scorebox").toggle();
-//        document.getElementById('scorebox').style.display = 'none';
-    });
-
-    console.log("AlleTurniere.de Ergebniseingabe gestartet!");
 })(jQuery);
 
